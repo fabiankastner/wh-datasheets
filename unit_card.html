@@ -1,0 +1,667 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Card</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto+Condensed:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto Condensed', 'Arial Narrow', sans-serif;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 10px;
+        }
+
+        .search-container {
+            width: 100%;
+            max-width: 320px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-family: 'Roboto Condensed', sans-serif;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.3s;
+        }
+
+        .search-input:focus {
+            border-color: #555;
+        }
+
+        .search-input::placeholder {
+            color: #666;
+        }
+
+        .autocomplete-list {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background: #1a1a1a;
+            border: 2px solid #333;
+            border-top: none;
+            border-radius: 0 0 6px 6px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .autocomplete-list.show {
+            display: block;
+        }
+
+        .autocomplete-item {
+            padding: 10px 15px;
+            color: #ccc;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-size: 13px;
+        }
+
+        .autocomplete-item:hover,
+        .autocomplete-item.active {
+            background: #2a2a2a;
+            color: #fff;
+        }
+
+        .autocomplete-item:last-child {
+            border-radius: 0 0 4px 4px;
+        }
+
+        .unit-card {
+            width: 100%;
+            max-width: 320px;
+            background: #1a1a1a;
+            border-radius: 8px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.5);
+            overflow: hidden;
+            border: 2px solid #333;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .card-header {
+            background: #000;
+            padding: 12px 15px;
+            text-align: center;
+            position: relative;
+        }
+
+        .unit-name {
+            font-size: 22px;
+            font-weight: bold;
+            text-transform: uppercase;
+            color: #fff;
+            letter-spacing: 2px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+        }
+
+        .unit-composition {
+            display: none;
+        }
+
+        .statline {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 4px;
+            padding: 15px;
+            background: #0a0a0a;
+        }
+
+        .stat {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 8px 4px;
+            text-align: center;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .stat-label {
+            font-size: 9px;
+            font-weight: bold;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 4px;
+            letter-spacing: 1px;
+        }
+
+        .stat-value {
+            font-size: 18px;
+            font-weight: bold;
+            color: #fff;
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.8);
+        }
+
+        .abilities-section {
+            padding: 12px 15px;
+            background: #000;
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+
+        .section-title {
+            font-size: 11px;
+            font-weight: bold;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 8px;
+            letter-spacing: 1.5px;
+            text-align: center;
+        }
+
+        .abilities-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .ability {
+            background: #1a1a1a;
+            color: #ccc;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            border: 1px solid #333;
+            box-shadow: inset 0 1px 2px rgba(0, 0, 0, 0.5);
+        }
+
+        .abilities-detailed {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .ability-detail {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 3px;
+            padding: 6px 8px;
+        }
+
+        .ability-detail-name {
+            font-size: 9px;
+            font-weight: bold;
+            color: #aaa;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 3px;
+        }
+
+        .ability-detail-text {
+            font-size: 8px;
+            color: #888;
+            line-height: 1.3;
+        }
+
+        .weapons-section {
+            padding: 12px 15px 15px 15px;
+            background: #0a0a0a;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .weapons-container {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .weapon-type {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 6px;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .weapon-type-title {
+            font-size: 10px;
+            font-weight: bold;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 6px;
+            text-align: center;
+            letter-spacing: 1px;
+            padding-bottom: 4px;
+        }
+
+        .weapon {
+            background: #0a0a0a;
+            border-radius: 3px;
+            padding: 6px;
+            margin-top: 4px;
+            border: 1px solid #222;
+        }
+
+        .weapon-stats {
+            display: flex;
+            justify-content: space-between;
+            gap: 4px;
+            margin-top: 4px;
+        }
+
+        .weapon-stat {
+            background: #1a1a1a;
+            padding: 4px 6px;
+            border-radius: 2px;
+            text-align: center;
+            border: 1px solid #333;
+            flex: 1;
+            min-width: 0;
+        }
+
+        .weapon-stat-label {
+            font-size: 8px;
+            color: #888;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+
+        .weapon-stat-value {
+            font-size: 12px;
+            color: #fff;
+            font-weight: bold;
+            margin-top: 2px;
+        }
+
+
+
+        .invulnerable-save {
+            background: #1a1a1a;
+            color: #fff;
+            padding: 8px;
+            text-align: center;
+            font-weight: bold;
+            margin-top: 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            text-transform: uppercase;
+            border: 1px solid #333;
+        }
+
+        /* Print styles for trading card format */
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .unit-card {
+                max-width: 63mm; /* Standard trading card width */
+                border: 1px solid #000;
+                box-shadow: none;
+                page-break-after: always;
+            }
+        }
+
+        /* Mobile optimization */
+        @media (max-width: 400px) {
+            .unit-card {
+                max-width: 100%;
+            }
+            
+            .stat-value {
+                font-size: 16px;
+            }
+            
+            .weapon-stat-value {
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Search Container -->
+    <div class="search-container">
+        <input type="text" id="searchInput" class="search-input" placeholder="Search units..." autocomplete="off">
+        <div id="autocompleteList" class="autocomplete-list"></div>
+    </div>
+
+    <!-- Unit Card -->
+    <div class="unit-card" id="unitCard">
+        <!-- Content will be dynamically loaded -->
+    </div>
+
+    <script>
+        let availableUnits = [];
+        let currentUnitIndex = -1;
+
+        // Fetch available units from the units folder
+        async function fetchAvailableUnits() {
+            try {
+                // Try to fetch a units list from the server
+                const response = await fetch('units/');
+                const text = await response.text();
+                
+                // Parse HTML to extract .yaml files
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(text, 'text/html');
+                const links = doc.querySelectorAll('a');
+                
+                availableUnits = Array.from(links)
+                    .map(link => link.getAttribute('href'))
+                    .filter(href => href && href.endsWith('.yaml'))
+                    .map(href => {
+                        // Decode URI and remove any 'units/' prefix if present
+                        let filename = decodeURIComponent(href);
+                        // Remove 'units/' prefix if it exists
+                        filename = filename.replace(/^.*\/units\//, '');
+                        filename = filename.replace(/^units\//, '');
+                        // Remove any leading './' or '/'
+                        filename = filename.replace(/^\.\//, '').replace(/^\//, '');
+                        return filename;
+                    });
+                
+                if (availableUnits.length === 0) {
+                    // Fallback to known units if directory listing doesn't work
+                    availableUnits = ['strike team.yaml', 'starscythe crisis suits.yaml'];
+                }
+            } catch (error) {
+                // Fallback to known units
+                availableUnits = ['strike team.yaml', 'starscythe crisis suits.yaml'];
+            }
+        }
+
+        // Initialize search functionality
+        const searchInput = document.getElementById('searchInput');
+        const autocompleteList = document.getElementById('autocompleteList');
+
+        searchInput.addEventListener('input', function() {
+            const value = this.value.toLowerCase();
+            autocompleteList.innerHTML = '';
+            
+            if (!value) {
+                autocompleteList.classList.remove('show');
+                return;
+            }
+
+            const filtered = availableUnits.filter(unit => 
+                unit.toLowerCase().includes(value)
+            );
+
+            if (filtered.length > 0) {
+                filtered.forEach((unit, index) => {
+                    const item = document.createElement('div');
+                    item.className = 'autocomplete-item';
+                    // Show only the filename without .yaml extension
+                    const displayName = unit.replace('.yaml', '').replace(/^.*\//, '');
+                    item.textContent = displayName;
+                    item.addEventListener('click', () => {
+                        // Unit filename is just the filename, need to add units/ prefix
+                        const unitPath = 'units/' + unit;
+                        console.log('Loading unit:', unitPath);
+                        loadUnit(unitPath);
+                        searchInput.value = displayName;
+                        autocompleteList.classList.remove('show');
+                    });
+                    autocompleteList.appendChild(item);
+                });
+                autocompleteList.classList.add('show');
+            } else {
+                autocompleteList.classList.remove('show');
+            }
+        });
+
+        // Handle keyboard navigation
+        searchInput.addEventListener('keydown', function(e) {
+            const items = autocompleteList.querySelectorAll('.autocomplete-item');
+            
+            if (e.key === 'ArrowDown') {
+                e.preventDefault();
+                currentUnitIndex = Math.min(currentUnitIndex + 1, items.length - 1);
+                updateActiveItem(items);
+            } else if (e.key === 'ArrowUp') {
+                e.preventDefault();
+                currentUnitIndex = Math.max(currentUnitIndex - 1, -1);
+                updateActiveItem(items);
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (currentUnitIndex >= 0 && items[currentUnitIndex]) {
+                    items[currentUnitIndex].click();
+                }
+            } else if (e.key === 'Escape') {
+                autocompleteList.classList.remove('show');
+            }
+        });
+
+        function updateActiveItem(items) {
+            items.forEach((item, index) => {
+                item.classList.toggle('active', index === currentUnitIndex);
+            });
+            if (items[currentUnitIndex]) {
+                items[currentUnitIndex].scrollIntoView({ block: 'nearest' });
+            }
+        }
+
+        // Close autocomplete when clicking outside
+        document.addEventListener('click', function(e) {
+            if (!searchInput.contains(e.target) && !autocompleteList.contains(e.target)) {
+                autocompleteList.classList.remove('show');
+            }
+        });
+
+        // Get YAML filename from URL parameter or use default
+        const urlParams = new URLSearchParams(window.location.search);
+        const defaultUnit = 'units/starscythe crisis suits.yaml';
+        let yamlFile = urlParams.get('unit') || defaultUnit;
+
+        // Load unit function
+        function loadUnit(unitPath) {
+            fetch(unitPath)
+                .then(response => response.text())
+                .then(yamlText => {
+                    const unit = jsyaml.load(yamlText);
+                    renderUnitCard(unit);
+                })
+                .catch(error => {
+                    console.error('Error loading unit file:', error);
+                    document.getElementById('unitCard').innerHTML = `
+                        <div style="color: white; padding: 20px; text-align: center;">
+                            <p>Error loading unit file: ${unitPath}</p>
+                            <p style="font-size: 12px; margin-top: 10px;">Make sure the file exists and is a valid YAML file.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // Initialize
+        fetchAvailableUnits().then(() => {
+            loadUnit(yamlFile);
+        });
+
+        function renderUnitCard(unit) {
+            const card = document.getElementById('unitCard');
+            
+            // Build HTML
+            let html = `
+                <!-- Card Header -->
+                <div class="card-header">
+                    <div class="unit-name">${unit.name || 'Unknown Unit'}</div>
+                </div>
+
+                <!-- Statline -->
+                <div class="statline">
+                    <div class="stat">
+                        <div class="stat-label">M</div>
+                        <div class="stat-value">${unit.statline.M}"</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">T</div>
+                        <div class="stat-value">${unit.statline.T}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">SV</div>
+                        <div class="stat-value">${unit.statline.SV}+</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">W</div>
+                        <div class="stat-value">${unit.statline.W}</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">LD</div>
+                        <div class="stat-value">${unit.statline.LD}+</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">OC</div>
+                        <div class="stat-value">${unit.statline.OC}</div>
+                    </div>
+                </div>
+
+                <!-- Abilities -->
+                <div class="abilities-section">
+                    <div class="section-title">Keywords & Abilities</div>
+                    <!-- Keywords (buttons) -->
+                    <div class="abilities-grid">
+            `;
+
+            // Add keywords
+            if (unit.keywords && unit.keywords.length > 0) {
+                unit.keywords.forEach(keyword => {
+                    html += `<div class="ability">${keyword}</div>`;
+                });
+            }
+
+            html += `</div>`;
+
+            // Add detailed abilities
+            if (unit.abilities && Object.keys(unit.abilities).length > 0) {
+                html += `<div class="abilities-detailed">`;
+                for (const [name, description] of Object.entries(unit.abilities)) {
+                    html += `
+                        <div class="ability-detail">
+                            <div class="ability-detail-name">${name}</div>
+                            <div class="ability-detail-text">${description}</div>
+                        </div>
+                    `;
+                }
+                html += `</div>`;
+            }
+
+            html += `</div>`;
+
+            // Add weapons section
+            html += `
+                <!-- Weapons -->
+                <div class="weapons-section">
+                    <div class="section-title">Weapons</div>
+                    <div class="weapons-container">
+            `;
+
+            // Add melee weapons
+            if (unit.melee_weapons && unit.melee_weapons.length > 0) {
+                html += `<div class="weapon-type">
+                    <div class="weapon-type-title">Melee</div>`;
+                unit.melee_weapons.forEach(weapon => {
+                    html += `
+                        <div class="weapon">
+                            <div class="weapon-stats">
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">RNG</div>
+                                    <div class="weapon-stat-value">${weapon.Range || '-'}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">A</div>
+                                    <div class="weapon-stat-value">${weapon.A}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">WS</div>
+                                    <div class="weapon-stat-value">${weapon.WS}+</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">S</div>
+                                    <div class="weapon-stat-value">${weapon.S}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">AP</div>
+                                    <div class="weapon-stat-value">${weapon.AP}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">D</div>
+                                    <div class="weapon-stat-value">${weapon.D}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            // Add ranged weapons
+            if (unit.ranged_weapons && unit.ranged_weapons.length > 0) {
+                html += `<div class="weapon-type">
+                    <div class="weapon-type-title">Ranged</div>`;
+                unit.ranged_weapons.forEach(weapon => {
+                    html += `
+                        <div class="weapon">
+                            <div class="weapon-stats">
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">RNG</div>
+                                    <div class="weapon-stat-value">${weapon.Range}"</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">A</div>
+                                    <div class="weapon-stat-value">${weapon.A}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">BS</div>
+                                    <div class="weapon-stat-value">${weapon.BS}+</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">S</div>
+                                    <div class="weapon-stat-value">${weapon.S}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">AP</div>
+                                    <div class="weapon-stat-value">${weapon.AP}</div>
+                                </div>
+                                <div class="weapon-stat">
+                                    <div class="weapon-stat-label">D</div>
+                                    <div class="weapon-stat-value">${weapon.D}</div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                });
+                html += `</div>`;
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            card.innerHTML = html;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,30 @@
+name: starscythe crisis suits
+statline:
+  M: 10
+  T: 5
+  SV: 3
+  W: 5
+  LD: 7
+  OC: 2
+invulnerable_save: null
+keywords:
+- Vehicle
+- Flying
+- Battlesuit
+abilities:
+  battlesuit support systems: eliglable to shoot when fell back
+  starscythe systems: +1 ap against infantry
+melee_weapons:
+- Range: '-'
+  A: 3
+  WS: 5
+  S: 5
+  AP: 0
+  D: 1
+ranged_weapons:
+- Range: 24
+  A: 8
+  BS: 4
+  S: 5
+  AP: 0
+  D: 1

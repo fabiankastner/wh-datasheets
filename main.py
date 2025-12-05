@@ -1,0 +1,41 @@
+from unit import Unit
+
+# strike_team = Unit(
+#     name="strike_team",
+#     statline={"M": 6, "T": 3, "SV": 4, "W": 1, "LD": 7, "OC": 1},
+#     invulnerable_save=None,
+#     keywords=[
+#         "Infantry", "Markerlight", "Rapid Fire 1",
+#     ],
+#     abilities={
+#         "support fire": "enemy infantry hit is -2\" to movement"
+#     },
+#     melee_weapons=[
+#         {"Range": "-", "A": 1, "WS": 5, "S": 4, "AP": 0, "D": 1},
+#     ],
+#     ranged_weapons=[
+#         {"Range": 30, "A": 2, "BS": 4, "S": 5, "AP": 0, "D": 1},
+#     ],
+# )
+# strike_team.to_yaml() 
+
+
+strike_team = Unit(
+    name="starscythe crisis suits",
+    statline={"M": 10, "T": 5, "SV": 3, "W": 5, "LD": 7, "OC": 2},
+    invulnerable_save=None,
+    keywords=[
+        "Vehicle", "Flying", "Battlesuit",
+    ],
+    abilities={
+        "battlesuit support systems": "eliglable to shoot when fell back",
+        "starscythe systems": "+1 ap against infantry"
+    },
+    melee_weapons=[
+        {"Range": "-", "A": 3, "WS": 5, "S": 5, "AP": 0, "D": 1},
+    ],
+    ranged_weapons=[
+        {"Range": 24, "A": 8, "BS": 4, "S": 5, "AP": 0, "D": 1},
+    ],
+)
+strike_team.to_yaml()
